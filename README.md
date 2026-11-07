@@ -15,7 +15,7 @@ Trabalho em grupo da disciplina de Banco de Dados.
 
 ```
                      ┌─────────────────────────────────┐
-   Aluno ──────────► │   Chatbot (Gemini + ferramentas) │
+   Aluno ──────────► │   Chatbot (Gemini + ferramentas)│
                      └──────┬───────────────────┬──────┘
                             │                   │
                  buscar_documentos       consultar_media
@@ -41,7 +41,7 @@ Trabalho em grupo da disciplina de Banco de Dados.
 
 | Camada | Tecnologia |
 |---|---|
-| Linguagem | Python 3.10 ou superior |
+| Linguagem | Python 3.14.5 |
 | Banco relacional | PostgreSQL 14 ou superior (PL/pgSQL) |
 | Banco vetorial | ChromaDB (persistente, similaridade por cosseno) |
 | LLM e embeddings | Google Gemini (`google-genai`), modelo de embeddings `gemini-embedding-001` |
