@@ -14,9 +14,9 @@ Trabalho em grupo da disciplina de Banco de Dados.
 ## Como funciona
 
 ```
-                     ┌─────────────────────────────────┐
-   Aluno ──────────► │   Chatbot (Gemini + ferramentas)│
-                     └──────┬───────────────────┬──────┘
+                     ┌──────────────────────────────────┐
+   Aluno ──────────► │  Chatbot (Gemini + ferramentas)  │
+                     └──────┬───────────────────┬───────┘
                             │                   │
                  buscar_documentos       consultar_media
                             │            consultar_boletim
