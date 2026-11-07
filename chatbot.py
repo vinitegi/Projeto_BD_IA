@@ -5,12 +5,13 @@ Uso:  python chatbot.py
 import os
 import sys
 
+import chromadb
 from google import genai
 from google.genai import types
 
-# reaproveita as funcoes da etapa 3 (o arquivo com o codigo da etapa 3 chama-se main.py)
-from base_vetorial import abrir_colecao, gerar_embeddings
-
+PASTA_CHROMA = "chroma_db"
+COLECAO = "smartcampus_docs"
+MODELO_EMBEDDING = "gemini-embedding-001"
 MODELO_CHAT = "gemini-3.8-flash"
 TOP_K = 4
 
@@ -20,6 +21,29 @@ Regras:
 - Cite o nome do documento de origem entre parenteses, por exemplo (aula-pratica-triggers.pdf).
 - Se os trechos nao trouxerem a resposta, diga que nao encontrou essa informacao nos documentos. Nao invente.
 - Responda em portugues do Brasil, de forma clara e curta."""
+
+
+def gerar_embeddings(textos: list[str], tarefa: str) -> list[list[float]]:
+    cliente = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+    resp = cliente.models.embed_content(
+        model=MODELO_EMBEDDING,
+        contents=textos,
+        config=types.EmbedContentConfig(task_type=tarefa),
+    )
+    return [e.values for e in resp.embeddings]
+
+
+def abrir_colecao():
+    """Abre a colecao criada na etapa 3. Se o nome for outro, usa a que existir na pasta."""
+    cliente = chromadb.PersistentClient(path=PASTA_CHROMA)
+    try:
+        return cliente.get_collection(COLECAO, embedding_function=None)
+    except Exception:
+        existentes = [c if isinstance(c, str) else c.name for c in cliente.list_collections()]
+        if not existentes:
+            sys.exit("Nenhuma colecao em chroma_db/. Rode primeiro a indexacao da etapa 3.")
+        print(f"(usando a colecao '{existentes[0]}')")
+        return cliente.get_collection(existentes[0], embedding_function=None)
 
 
 def buscar_trechos(pergunta: str, k: int = TOP_K) -> list[dict]:
@@ -65,7 +89,7 @@ def main():
         if pergunta.lower() in {"sair", "exit", "quit"}:
             break
         try:
-            trechos = buscar_trechos(pergunta)                                # R: recupera
+            trechos = buscar_trechos(pergunta)                              # R: recupera
             resposta = chat.send_message(montar_mensagem(pergunta, trechos))  # A + G: aumenta e gera
             print(f"\nSmartCampus: {resposta.text}")
             print("   Fontes: " + ", ".join(sorted({t['fonte'] for t in trechos})) + "\n")
