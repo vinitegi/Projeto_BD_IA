@@ -42,7 +42,7 @@ Trabalho em grupo da disciplina de Banco de Dados.
 | Camada | Tecnologia |
 |---|---|
 | Linguagem | Python 3.14.5 |
-| Banco relacional | PostgreSQL 14 ou superior (PL/pgSQL) |
+| Banco relacional | PostgreSQL 18 |
 | Banco vetorial | ChromaDB (persistente, similaridade por cosseno) |
 | LLM e embeddings | Google Gemini (`google-genai`), modelo de embeddings `gemini-embedding-001` |
 | Driver do banco | `psycopg` 3 |
