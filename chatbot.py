@@ -4,6 +4,7 @@ Uso:  python chatbot.py
 """
 import os
 import sys
+import time
 
 import chromadb
 from google import genai
@@ -12,7 +13,7 @@ from google.genai import types
 PASTA_CHROMA = "chroma_db"
 COLECAO = "smartcampus_docs"
 MODELO_EMBEDDING = "gemini-embedding-001"
-MODELO_CHAT = "gemini-3.8-flash"
+MODELO_CHAT = "gemini-3.5-flash-lite"
 TOP_K = 4
 
 INSTRUCOES = """Voce e o SmartCampus, assistente academico de uma faculdade.
@@ -65,6 +66,20 @@ def montar_mensagem(pergunta: str, trechos: list[dict]) -> str:
     return f"TRECHOS DOS DOCUMENTOS:\n{contexto}\n\nPERGUNTA DO ALUNO: {pergunta}"
 
 
+def enviar_com_tentativas(chat, mensagem, tentativas=4):
+    """Se o Gemini estiver ocupado (503) ou no limite (429), espera e tenta de novo."""
+    for i in range(tentativas):
+        try:
+            return chat.send_message(mensagem)
+        except Exception as e:
+            if ("503" in str(e) or "429" in str(e)) and i < tentativas - 1:
+                espera = 3 * (2 ** i)  # 3s, 6s, 12s
+                print(f"   (Gemini ocupado, tentando de novo em {espera}s...)")
+                time.sleep(espera)
+            else:
+                raise
+
+
 def main():
     chave = os.getenv("GEMINI_API_KEY")
     if not chave:
@@ -90,8 +105,12 @@ def main():
             break
         try:
             trechos = buscar_trechos(pergunta)                              # R: recupera
-            resposta = chat.send_message(montar_mensagem(pergunta, trechos))  # A + G: aumenta e gera
-            print(f"\nSmartCampus: {resposta.text}")
+            resposta = enviar_com_tentativas(chat, montar_mensagem(pergunta, trechos))  # A + G
+            texto = resposta.text
+            if not texto:
+                motivo = resposta.candidates[0].finish_reason if resposta.candidates else "sem candidatos"
+                texto = f"(o Gemini devolveu uma resposta vazia; motivo: {motivo}. Tente reformular a pergunta.)"
+            print(f"\nSmartCampus: {texto}")
             print("   Fontes: " + ", ".join(sorted({t['fonte'] for t in trechos})) + "\n")
         except Exception as e:
             print(f"\n[erro] {e}\n")
